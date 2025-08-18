@@ -2,8 +2,31 @@
 //
 // Purpose: 
 //
+// License:
+//        MIT License
+//
+//        Copyright (c) 2025 [un usuario], https://github.com/Unusuario2
+//
+//        Permission is hereby granted, free of charge, to any person obtaining a copy
+//        of this software and associated documentation files (the "Software"), to deal
+//        in the Software without restriction, including without limitation the rights
+//        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//        copies of the Software, and to permit persons to whom the Software is
+//        furnished to do so, subject to the following conditions:
+//
+//        The above copyright notice and this permission notice shall be included in all
+//        copies or substantial portions of the Software.
+//
+//        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//        SOFTWARE.
+//
 // $NoKeywords: $
-//===============================================================================//
+//==============================================================================//
 #include <io.h>
 #include <windows.h>
 #include <wchar.h>
@@ -130,7 +153,7 @@ FileList CResourceCopy::ScanDirectoryRecursive(const char* pszDir)
     }
     else
     {
-        // No wildcard → shallow scan, no extension filter
+        // No wildcard -> shallow scan, no extension filter
         return this->ScanDirectoryWorker(baseDir, false, nullptr);
     }
 }
@@ -350,10 +373,11 @@ bool CResourceCopy::IsWritable(const char* pSrcDir, const char* pDstDir, const b
 }
 
 
+// TODO: Make a separate funtion for the FileList support!!
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CResourceCopy::CopyDirTo(const char* pSrcDir, const char* pDstDir, const bool bMultiThread = true, const bool bOverwrite = true)
+void CResourceCopy::CopyDirTo(const char* pSrcDir, const char* pDstDir, const bool bMultiThread, const bool bOverwrite, const FileList* pCopyList)
 {
     if ((!pSrcDir || !*pSrcDir) || (!pDstDir || !*pDstDir))
         return;
@@ -394,7 +418,11 @@ void CResourceCopy::CopyDirTo(const char* pSrcDir, const char* pDstDir, const bo
         Error("There is not enough free space on unit %s!\n", pTemp);
     }
 
-    const FileList DirAssetList = this->ScanDirectoryRecursive(pSrcDir);
+    FileList DirAssetList;
+    if (pCopyList)
+        DirAssetList.insert(DirAssetList.begin(), pCopyList->begin(), pCopyList->end());
+    else
+        DirAssetList = this->ScanDirectoryRecursive(pSrcDir);
 
     if (DirAssetList.empty())
     {
@@ -459,17 +487,17 @@ void CResourceCopy::CopyDirTo(const char* pSrcDir, const char* pDstDir, const bo
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CResourceCopy::TransferDirTo(const char* pSrcDir, const char* pDstDir, const bool bMultiThread, const bool bOverwrite)
+void CResourceCopy::TransferDirTo(const char* pSrcDir, const char* pDstDir, const bool bMultiThread, const bool bDeleteMainFolder, const bool bOverwrite, const FileList* pDeleteList)
 {
     this->CopyDirTo(pSrcDir, pDstDir, bMultiThread, bOverwrite);
-    this->DeleteDirRecursive(pSrcDir, bMultiThread);
+    this->DeleteDirRecursive(pSrcDir, bMultiThread, bDeleteMainFolder);
 }
 
 
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CResourceCopy::DeleteDirRecursive(const char* pDir, const bool bMultiThread = true)
+void CResourceCopy::DeleteDirRecursive(const char* pDir, const bool bMultiThread, const bool bDeleteMainFolder, const FileList* pDeleteList)
 {
     if (!pDir || !*pDir)
         return;
@@ -495,9 +523,14 @@ void CResourceCopy::DeleteDirRecursive(const char* pDir, const bool bMultiThread
     }
 
     const int k_iThreads = bMultiThread ? m_iThreads : 1;
-    const FileList Flist = this->ScanDirectoryRecursive(pDir);
 
-    if (Flist.empty())
+    FileList DirAssetList;
+    if (pDeleteList)
+        DirAssetList.insert(DirAssetList.begin(), pDeleteList->begin(), pDeleteList->end());
+    else
+        DirAssetList = this->ScanDirectoryRecursive(pDir);
+
+    if (DirAssetList.empty())
     {
         Warning("There are no files to delete!\n"
                 "Skipping operation!\n");
@@ -505,7 +538,7 @@ void CResourceCopy::DeleteDirRecursive(const char* pDir, const bool bMultiThread
     }
 
     std::vector<std::future<void>> tasks;
-    for (auto& File : Flist)
+    for (auto& File : DirAssetList)
     {
         tasks.emplace_back(std::async(std::launch::async, [this, File](void) 
             {
@@ -537,15 +570,17 @@ void CResourceCopy::DeleteDirRecursive(const char* pDir, const bool bMultiThread
         t.get();
     }
 
-    if(this->DeleteEmptyFolder(szDir))
+    if (bDeleteMainFolder) 
     {
-        Msg("Deleting folder: "); ColorSpewMessage(SPEW_MESSAGE, &ColorPath, "%s\n", szDir);
+        if (this->DeleteEmptyFolder(szDir))
+        {
+            Msg("Deleting folder: "); ColorSpewMessage(SPEW_MESSAGE, &ColorPath, "%s\n", szDir);
+        }
+        else
+        {
+            ColorSpewMessage(SPEW_MESSAGE, &ColorUnSucesfull, "Failed to delete folder: %s\n", szDir);
+        }
     }
-    else
-    {
-        ColorSpewMessage(SPEW_MESSAGE, &ColorUnSucesfull, "Failed to delete folder: %s\n", szDir);
-    }
-
     delete[] szDir;
 }
 
@@ -647,7 +682,6 @@ void CResourceCopy::GenerateGlobalOperationReport()
     ColorSpewMessage(SPEW_MESSAGE, &ColorUnSucesfull,   "Error: %i,     ",      m_iFailedOperations);
     ColorSpewMessage(SPEW_MESSAGE, &ColorWarning,       "Skipped: %i         ", m_iSkippedOperations);
     Msg("\n-------------------------------------------------------------------------------------------\n");
-    Msg("\n");
 }
 
 

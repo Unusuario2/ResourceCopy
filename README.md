@@ -6,7 +6,7 @@
 
 ---
 
-## 📦 Installation
+## Installation
 
 To install **ResourceCopy**, follow these steps:
 
@@ -18,18 +18,18 @@ To install **ResourceCopy**, follow these steps:
 
 ---
 
-## ✨ Features
+## Features
 
-- 🔍 Recursive and shallow directory scanning  
-- 📂 Support for wildcards (`*`) and extension filters (e.g., `*.vtf`)  
-- 📑 Batch **copy**, **transfer**, and **delete** operations  
-- ⚡ Multithreading support for faster processing  
-- 🛠️ Reports and logging (operation reports, error reports, hardware report)  
-- 🗑️ Safe deletion (`-safe` mode prevents overwriting or deleting important files)  
-- 📊 Utilities for quick checks: folder size, drive free space, file size  
-- 🖨️ Print directory contents with filters  
+-  Recursive and shallow directory scanning  
+-  Support for wildcards (`*`) and extension filters (e.g., `*.vtf`)  
+-  Batch **copy**, **transfer**, and **delete** operations  
+-  Multithreading support for faster processing  
+-  Reports and logging (operation reports, error reports, hardware report)  
+-  Safe deletion (`-safe` mode prevents overwriting or deleting important files)  
+-  Utilities for quick checks: folder size, drive free space, file size  
+-  Print directory contents with filters  
 
-### 💻 C++ API (`CResourceCopy`)
+### C++ API (`CResourceCopy`)
 
 You can use **CResourceCopy** as a C++ API for integration into tools or SDK projects:
 
@@ -54,14 +54,15 @@ You can use **CResourceCopy** as a C++ API for integration into tools or SDK pro
 
 CResourceCopy* pResourceCopy = new CResourceCopy();
 pResourceCopy->SetQuietSpewMode();
-pResourceCopy->CopyDirTo("C:\\source_dir", "C:\\destination_dir", true, true);
+pResourceCopy->CopyDirTo("C:\\source_dir\\*", "C:\\destination_dir", true, true);
 pResourceCopy->GenerateGlobalOperationReport();
 delete g_pResourceCopy;
 ```
-## Contact
+---
+## Contact  
 
-Steam: https://steamcommunity.com/profiles/76561199073832016/  
-Twitter: https://x.com/47Z14  
-Discord: carlossuarez7285  
+- **Steam**: [Profile Link](https://steamcommunity.com/profiles/76561199073832016/)  
+- **Twitter/X**: [@47Z14](https://x.com/47Z14)  
+- **Discord**: `carlossuarez7285`  
 
 ---

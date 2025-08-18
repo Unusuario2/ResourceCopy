@@ -1,9 +1,32 @@
 //=== CResourceCopy -> Written by Unusuario2, https://github.com/Unusuario2  ====//
 //
-// Purpose:
+// Purpose: 
+//
+// License:
+//        MIT License
+//
+//        Copyright (c) 2025 [un usuario], https://github.com/Unusuario2
+//
+//        Permission is hereby granted, free of charge, to any person obtaining a copy
+//        of this software and associated documentation files (the "Software"), to deal
+//        in the Software without restriction, including without limitation the rights
+//        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//        copies of the Software, and to permit persons to whom the Software is
+//        furnished to do so, subject to the following conditions:
+//
+//        The above copyright notice and this permission notice shall be included in all
+//        copies or substantial portions of the Software.
+//
+//        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//        SOFTWARE.
 //
 // $NoKeywords: $
-//===============================================================================//
+//==============================================================================//
 #include <windows.h>
 #include <vector>
 #include <array>
@@ -29,6 +52,7 @@
 // Purpose: Global vars
 //-----------------------------------------------------------------------------
 bool			g_bQuiet            = false;
+bool			g_bFileMode         = false;
 bool            g_bCreateLogFile    = false;
 bool            g_bDeleteDir        = false;
 bool            g_bPrintDirContents = false;
@@ -43,7 +67,6 @@ char            g_szSourceDir[MAX_PATH];
 char            g_szDestinationDir[MAX_PATH];
 CResourceCopy*  g_pResourceCopy;
 FileList        g_vGlobalCopyList;
-
 
 
 //-----------------------------------------------------------------------------
@@ -71,6 +94,7 @@ static void PrintUsage(int argc, char* argv[])
         "   -shallow:                       Don't recurse for wildcards.\n"
         "   -deletedir <path>:              Given a dir deletes all the files inside. (Note: Wildcards are acepted).\n"
         "   -safe:                          Don't overwrite existing target files.\n"
+        "   -f:                             Activats single file mode.\n"   
         //"   -skip <substring>:              Skip files whose full path contains this substring. Can be repeated.\n" // TODO!
         //"   -rename <from_tag> <to_tag>:    Rename files where 'from_tag' occurs in the filename.\n"
         "   -transferfiles:                 Copies the files found at the source dir to the destination dir and deletes the source dir.\n"
@@ -133,6 +157,10 @@ static void ParseCommandline(int argc, char* argv[])
         {
             g_bProcessShallow = true;
         }
+        else if (!V_stricmp(argv[i], "-f"))
+        {
+            g_bSingleFile = true;
+        }
         else if (!V_stricmp(argv[i], "-threads"))
         {
             if (++i < argc && argv[i] != '\0')
@@ -143,6 +171,7 @@ static void ParseCommandline(int argc, char* argv[])
                     Warning("Expected value greater or equal that 1!\n");
                     PrintUsage(argc, argv);
                 }
+                g_iThreads = iTemp;
             }
             else
             {
@@ -235,12 +264,6 @@ static void ParseCommandline(int argc, char* argv[])
               "Source: %s\n"
               "Destination: %s\n", 
               argv[argc - 2], argv[argc - 1]);
-    }
-
-    char* ptr = V_strrchr(g_szSourceDir, '.');
-    if (ptr && *(ptr + 1) != '\0' && *(ptr - 1) != '*')
-    {
-        g_bSingleFile = true;
     }
 
     if(g_bProcessShallow && !g_bSingleFile)
@@ -395,7 +418,7 @@ int main(int argc, char* argv[])
         Msg("---- Operation: %s ----\n", g_bTransferFiles ? "Copying" : "Trasfering");
 
         char szDstFile[MAX_PATH];
-        char* ptr = V_strrchr(g_szSourceDir, '\\') + 1;
+        char* ptr = V_strrchr(g_szSourceDir, '\\');
         V_snprintf(szDstFile, sizeof(szDstFile), "%s%s", g_szDestinationDir, ptr);
 
         Msg("Source: ");        ColorSpewMessage(SPEW_MESSAGE, &ColorPath, "%s\n", g_szSourceDir);
