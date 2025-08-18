@@ -2,6 +2,8 @@
 
 **ResourceCopy** is a command-line tool and C++ API for performing batch file operations like copying, transferring, and deleting files and directories. It is designed for developers working with Source engine projects, modding, or any workflow that requires fast and flexible file management.
 
+<img width="1022" height="436" alt="image" src="https://github.com/user-attachments/assets/c528e7ba-73c4-4498-863d-85fcf4e0f9f5" />
+
 ---
 
 ## 📦 Installation
