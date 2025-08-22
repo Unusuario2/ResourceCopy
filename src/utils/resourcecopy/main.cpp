@@ -143,6 +143,7 @@ static void ParseCommandline(int argc, char* argv[])
                     Warning("Expected value greater or equal that 1!\n");
                     PrintUsage(argc, argv);
                 }
+                g_iThreads = iTemp;
             }
             else
             {
